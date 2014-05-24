@@ -29,7 +29,7 @@ namespace xgboost{
             // interface for model setting and loading
             // calling procedure:
             //  (1) booster->SetParam to setting necessary parameters
-            //  (2) if it is first time usage of the model: 
+            //  (2) if it is first time usage of the model:
             //          call booster->InitModel
             //      else: 
             //          call booster->LoadModel

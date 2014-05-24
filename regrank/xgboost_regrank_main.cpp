@@ -111,9 +111,9 @@ namespace xgboost{
                 }
             }
         private:
-            inline void InitData(void){
-                if (name_fmap != "NULL") fmap.LoadText(name_fmap.c_str());
-                if (task == "dump") return;
+            inline void InitData(void) {
+                if (name_fmap != "NULL") { fmap.LoadText(name_fmap.c_str()); }
+                if (task == "dump") { return; }
                 if (task == "pred" || task == "dumppath"){
                     data.CacheLoad(test_path.c_str(), silent != 0, use_buffer != 0);
                 }
@@ -297,7 +297,7 @@ namespace xgboost{
 };
 
 int main( int argc, char *argv[] ){
-  xgboost::random::Seed( 0 );
-  xgboost::regrank::RegBoostTask tsk;
-  return tsk.Run( argc, argv );
+    xgboost::random::Seed( 0 );
+    xgboost::regrank::RegBoostTask tsk;
+    return tsk.Run( argc, argv );
 }

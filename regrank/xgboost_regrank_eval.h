@@ -132,7 +132,7 @@ namespace xgboost{
                         b_fp += wt;
                     }
                     if( rec[i].first != rec[i+1].first ){
-                        double ams = sqrtf( 2*((s_tp+b_fp+br) * log( 1.0 + s_tp/(b_fp+br) ) - s_tp) );
+                        double ams = sqrt( 2*((s_tp+b_fp+br) * log( 1.0 + s_tp/(b_fp+br) ) - s_tp) );
                         if( tams < ams ){
                             thresindex = i;
                             tams = ams;
@@ -141,9 +141,9 @@ namespace xgboost{
                 }
                 if( ntop == ndata ){
                     fprintf( stderr, "\tams-ratio=%g", float(thresindex)/ndata );
-                    return tams;
+                    return (float)tams;
                 }else{
-                    return sqrtf( 2*((s_tp+b_fp+br) * log( 1.0 + s_tp/(b_fp+br) ) - s_tp) );
+                    return (float)sqrt( 2*((s_tp+b_fp+br) * log( 1.0 + s_tp/(b_fp+br) ) - s_tp) );
                 }
             }
             virtual const char *Name(void) const{
@@ -180,7 +180,7 @@ namespace xgboost{
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
                 utils::Assert( preds.size() == info.labels.size(), "label size predict size not match" );
-                std::vector<unsigned> tgptr(2, 0); tgptr[1] = preds.size();
+                std::vector<unsigned int> tgptr(2, 0); tgptr[1] = (unsigned int)preds.size();
                 const std::vector<unsigned> &gptr = info.group_ptr.size() == 0 ? tgptr : info.group_ptr;
                 utils::Assert(gptr.back() == preds.size(), "EvalAuc: group structure must match number of prediction");
                 const unsigned ngroup = static_cast<unsigned>(gptr.size() - 1);
@@ -298,7 +298,7 @@ namespace xgboost{
                 for( size_t i = 0; i < rec.size() && i < this->topn_; i ++ ){
                     const unsigned rel = rec[i].second;
                     if( rel != 0 ){ 
-                        sumdcg += logf(2.0f) * ((1<<rel)-1) / logf( i + 2 );
+                        sumdcg += logf(2.0f) * (float)((1<<rel)-1) / logf( (float)(i + 2) );
                     }
                 }
                 return static_cast<float>(sumdcg);

@@ -25,9 +25,9 @@ namespace xgboost{
          *        this class can be used as base code to create booster variants
          *         *
          *  relation to xgboost.h:
-         *    (1) xgboost.h provides a interface to a single booster(e.g. a single regression tree )
+         *    (1) xgboost.h provides an interface to a single booster(e.g. a single regression tree)
          *        while GBMBaseModel builds upon IBooster to build a class that
-         *        ensembls the boosters together;
+         *        ensembles the boosters together;
          *    (2) GBMBaseModel provides prediction buffering scheme to speedup training;
          *    (3) Summary: GBMBaseModel is a standard wrapper for boosting ensembles;
          *

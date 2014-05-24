@@ -173,6 +173,7 @@ namespace xgboost{
             struct ColIter : public RowIter{
                 ColIter(const REntry* dptr, const REntry* end)
                 :RowIter(dptr, end){}
+
                 inline bst_uint  rindex(void) const{
                     return this->findex();
                 }
@@ -233,18 +234,23 @@ namespace xgboost{
                 utils::Assert(findex.size() == fvalue.size());
                 unsigned cnt = 0;
                 for (size_t i = 0; i < findex.size(); i++){
-                    if (findex[i] < fstart || findex[i] >= fend) continue;
+                    if (findex[i] < fstart || findex[i] >= fend) { continue; }
                     row_data_.push_back(REntry(findex[i], fvalue[i]));
                     cnt++;
                 }
+                
                 row_ptr_.push_back(row_ptr_.back() + cnt);
                 return row_ptr_.size() - 2;
             }
+
             /*!  \brief get row iterator*/
-            inline RowIter GetRow(size_t ridx) const{
+            inline RowIter GetRow(size_t ridx) const {
                 utils::Assert(!bst_debug || ridx < this->NumRow(), "row id exceed bound");
-                return RowIter(&row_data_[row_ptr_[ridx]] - 1, &row_data_[row_ptr_[ridx + 1]] - 1);
+                // Accessing the end sentinal as &row_data_[row_ptr_[ridx + 1]] triggers an overrun assert
+                // in VC++ in vector::operator[]
+                return RowIter(&row_data_[0] + row_ptr_[ridx] - 1, &row_data_[0] + row_ptr_[ridx + 1] - 1);
             }
+
             /*!  \brief get row iterator*/
             inline RowIter GetRow(size_t ridx, unsigned gid) const{
                 utils::Assert(gid == 0, "FMatrixS only have 1 column group");
@@ -263,12 +269,16 @@ namespace xgboost{
             /*!  \brief get col iterator*/
             inline ColIter GetSortedCol(size_t cidx) const{
                 utils::Assert(!bst_debug || cidx < this->NumCol(), "col id exceed bound");
-                return ColIter(&col_data_[col_ptr_[cidx]] - 1, &col_data_[col_ptr_[cidx + 1]] - 1);
+                
+                // Accessing the end sentinal as &col_data_[col_ptr_[cidx + 1]] triggers an overrun assert
+                // in VC++ in vector::operator[]
+                return ColIter(&col_data_[0] + col_ptr_[cidx] - 1, &col_data_[0] + col_ptr_[cidx + 1] - 1);
             }
+
             /*!  \brief get col iterator */
             inline ColBackIter GetReverseSortedCol(size_t cidx) const{
                 utils::Assert(!bst_debug || cidx < this->NumCol(), "col id exceed bound");
-                return ColBackIter(&col_data_[col_ptr_[cidx + 1]], &col_data_[col_ptr_[cidx]]);
+                return ColBackIter(&col_data_[0] + col_ptr_[cidx + 1], &col_data_[0] + col_ptr_[cidx]);
             }
             /*!
              * \brief intialize the data so that we have both column and row major
@@ -292,7 +302,8 @@ namespace xgboost{
                 unsigned ncol = static_cast<unsigned>(this->NumCol());
                 #pragma omp parallel for schedule(static)
                 for (unsigned i = 0; i < ncol; i++){
-                    std::sort(&col_data_[col_ptr_[i]], &col_data_[col_ptr_[i + 1]], REntry::cmp_fvalue);
+                    // Accessing the end sentinal as &col_data_[col_ptr_[cidx + 1]] triggers an overrun assert
+                    std::sort(&col_data_[0] + col_ptr_[i], &col_data_[0] + col_ptr_[i + 1], REntry::cmp_fvalue);
                 }
             }
             /*!

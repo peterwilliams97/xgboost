@@ -72,8 +72,9 @@ namespace xgboost{
              */
             inline void LoadText(const char* fname, bool silent = false){
                 data.Clear();
-                FILE* file = utils::FopenCheck(fname, "r");
-                float label; bool init = true;
+                FILE *file = utils::FopenCheck(fname, "r");
+                float label; 
+                bool init = true;
                 char tmp[1024];
                 std::vector<booster::bst_uint> findex;
                 std::vector<booster::bst_float> fvalue;
@@ -81,14 +82,16 @@ namespace xgboost{
                 while (fscanf(file, "%s", tmp) == 1){
                     unsigned index; float value;
                     if (sscanf(tmp, "%u:%f", &index, &value) == 2){
-                        findex.push_back(index); fvalue.push_back(value);
+                        findex.push_back(index); 
+                        fvalue.push_back(value);
                     }
-                    else{
+                    else {
                         if (!init){
                             info.labels.push_back(label);
                             data.AddRow(findex, fvalue);
                         }
-                        findex.clear(); fvalue.clear();
+                        findex.clear(); 
+                        fvalue.clear();
                         utils::Assert(sscanf(tmp, "%f", &label) == 1, "invalid format");
                         init = false;
                     }
@@ -197,7 +200,7 @@ namespace xgboost{
              * \param savebuffer whether do save binary buffer if it is text
              */
             inline void CacheLoad(const char *fname, bool silent = false, bool savebuffer = true){
-                int len = strlen(fname);
+                int len = (int)strlen(fname);
                 if (len > 8 && !strcmp(fname + len - 7, ".buffer")){
                     if( !this->LoadBinary(fname, silent) ){
                         fprintf(stderr,"can not open file \"%s\"", fname);

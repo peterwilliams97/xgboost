@@ -36,7 +36,7 @@ namespace xgboost{
                 model.InitModel();
             }
         public:
-            virtual void DoBoost( std::vector<float> &grad, 
+            virtual void DoBoost( std::vector<float> &grad,
                                   std::vector<float> &hess,
                                   const FMatrix &fmat,
                                   const std::vector<unsigned> &root_index ){
@@ -50,7 +50,7 @@ namespace xgboost{
                 }
                 return sum;
             }
-            virtual float Predict( const std::vector<float> &feat, 
+            virtual float Predict( const std::vector<float> &feat,
                                    const std::vector<bool>  &funknown,
                                    unsigned rid = 0 ){
                 float sum = model.bias();
@@ -70,7 +70,7 @@ namespace xgboost{
                 float reg_lambda;
                 /*! \brief regularization weight for L1 norm */
                 float reg_alpha;
-                 /*! \brief regularization weight for L2 norm  in bias */               
+                 /*! \brief regularization weight for L2 norm  in bias */
                 float reg_lambda_bias;
                 
                 ParamTrain( void ){
@@ -84,7 +84,7 @@ namespace xgboost{
                     if( !strcmp( "alpha", name ) )  reg_alpha  = (float)atof( val );
                     if( !strcmp( "lambda_bias", name ) ) reg_lambda_bias = (float)atof( val );
                     // real names
-                    if( !strcmp( "learning_rate", name ) ) learning_rate = (float)atof( val );     
+                    if( !strcmp( "learning_rate", name ) ) learning_rate = (float)atof( val );
                     if( !strcmp( "reg_lambda", name ) )    reg_lambda = (float)atof( val );
                     if( !strcmp( "reg_alpha", name ) )     reg_alpha = (float)atof( val );
                     if( !strcmp( "reg_lambda_bias", name ) )    reg_lambda_bias = (float)atof( val );
@@ -157,13 +157,14 @@ namespace xgboost{
             ParamTrain param;
         protected:
             // update weights, should work for any FMatrix
-            inline void UpdateWeights( std::vector<float> &grad,                       
+            inline void UpdateWeights( std::vector<float> &grad,
                                        const std::vector<float> &hess,
                                        const FMatrix &smat ){
                 {// optimize bias
                     double sum_grad = 0.0, sum_hess = 0.0;
                     for( size_t i = 0; i < grad.size(); i ++ ){
-                        sum_grad += grad[ i ]; sum_hess += hess[ i ];
+                        sum_grad += grad[ i ]; 
+                        sum_hess += hess[ i ];
                     }
                     // remove bias effect
                     double dw = param.learning_rate * param.CalcDeltaBias( sum_grad, sum_hess, model.bias() );
@@ -175,7 +176,7 @@ namespace xgboost{
                 }
 
                 // optimize weight
-                const unsigned nfeat= (unsigned)smat.NumCol();                           
+                const unsigned nfeat= (unsigned)smat.NumCol();
                 for( unsigned i = 0; i < nfeat; i ++ ){
                     if( !smat.GetSortedCol( i ).Next() ) continue;
                     double sum_grad = 0.0, sum_hess = 0.0;

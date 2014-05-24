@@ -3,6 +3,7 @@
 #include "../regrank/xgboost_regrank.h"
 #include "../regrank/xgboost_regrank_data.h"
 
+
 namespace xgboost{
     namespace python{
         class DMatrix: public regrank::DMatrix{
@@ -35,12 +36,13 @@ namespace xgboost{
                 mat.row_ptr_.push_back( mat.row_ptr_.back() + len );
                 init_col_ = false;
             }
-            inline const XGEntry* GetRow(unsigned ridx, size_t* len) const{
+            inline const XGEntry* GetRow(unsigned ridx, size_t *len) const{
                 const xgboost::booster::FMatrixS &mat = this->data;
 
                 *len = mat.row_ptr_[ridx+1] - mat.row_ptr_[ridx];
                 return &mat.row_data_[ mat.row_ptr_[ridx] ];
             }
+
             inline void ParseCSR( const size_t *indptr,
                                   const unsigned *indices,
                                   const float *data,
@@ -66,7 +68,7 @@ namespace xgboost{
                 for( size_t i = 0; i < nrow; ++i, data += ncol ){
                     size_t nelem = 0;
                     for( size_t j = 0; j < ncol; ++j ){
-                        if( data[j] != missing ){                           
+                        if( data[j] != missing ){
                             mat.row_data_.push_back( XGEntry(j, data[j]) );
                             ++ nelem;
                         }
@@ -107,7 +109,7 @@ namespace xgboost{
                 utils::Assert( this->data.NumRow() == this->info.labels.size(), "DMatrix: number of labels must match number of rows in matrix");
             }
         };
-    
+
         class Booster: public xgboost::regrank::RegRankBoostLearner{
         private:
             bool init_trainer, init_model;
@@ -156,7 +158,7 @@ namespace xgboost{
                         memcpy( &thess[0], &hess_[g*tgrad.size()], sizeof(float)*tgrad.size() );
                         base_gbm.DoBoost(tgrad, thess, train.data, train.info.root_index, g );
                     }
-                }                
+                }
             }
         };
     };
@@ -165,20 +167,20 @@ namespace xgboost{
 using namespace xgboost::python;
 
 
-extern "C"{
-    void* XGDMatrixCreate( void ){
+extern "C" {
+    DLLEXPORT void *XGDMatrixCreate(void) {
         return new DMatrix();
     }
-    void XGDMatrixFree( void *handle ){
-        delete static_cast<DMatrix*>(handle);
+    DLLEXPORT void XGDMatrixFree( void *handle ){
+        delete static_cast<DMatrix *>(handle);
     }
-    void XGDMatrixLoad( void *handle, const char *fname, int silent ){
-        static_cast<DMatrix*>(handle)->Load(fname, silent!=0);
+    DLLEXPORT void XGDMatrixLoad( void *handle, const char *fname, int silent ){
+        static_cast<DMatrix *>(handle)->Load(fname, silent!=0);
     }
-    void XGDMatrixSaveBinary( void *handle, const char *fname, int silent ){
-        static_cast<DMatrix*>(handle)->SaveBinary(fname, silent!=0);
+    DLLEXPORT void XGDMatrixSaveBinary( void *handle, const char *fname, int silent ){
+        static_cast<DMatrix *>(handle)->SaveBinary(fname, silent!=0);
     }
-    void XGDMatrixParseCSR( void *handle, 
+    DLLEXPORT void XGDMatrixParseCSR(void *handle, 
                             const size_t *indptr,
                             const unsigned *indices,
                             const float *data,
@@ -186,35 +188,35 @@ extern "C"{
                             size_t nelem ){
         static_cast<DMatrix*>(handle)->ParseCSR(indptr, indices, data, nindptr, nelem);
     }
-    void XGDMatrixParseMat( void *handle, 
+    DLLEXPORT void XGDMatrixParseMat(void *handle, 
                             const float *data,
                             size_t nrow,
                             size_t ncol,
                             float  missing ){
       static_cast<DMatrix*>(handle)->ParseMat(data, nrow, ncol, missing);
     }
-    void XGDMatrixSetLabel( void *handle, const float *label, size_t len ){
-        static_cast<DMatrix*>(handle)->SetLabel(label,len);        
+    DLLEXPORT void XGDMatrixSetLabel( void *handle, const float *label, size_t len ){
+        static_cast<DMatrix*>(handle)->SetLabel(label, len);
     }
-    void XGDMatrixSetWeight( void *handle, const float *weight, size_t len ){
-        static_cast<DMatrix*>(handle)->SetWeight(weight,len);        
+    DLLEXPORT void XGDMatrixSetWeight( void *handle, const float *weight, size_t len ){
+        static_cast<DMatrix*>(handle)->SetWeight(weight,len);
     }
     void XGDMatrixSetGroup( void *handle, const unsigned *group, size_t len ){
-        static_cast<DMatrix*>(handle)->SetGroup(group,len);        
+        static_cast<DMatrix*>(handle)->SetGroup(group,len);
     }
-    const float* XGDMatrixGetLabel( const void *handle, size_t* len ){
+    DLLEXPORT const float* XGDMatrixGetLabel( const void *handle, size_t* len ){
         return static_cast<const DMatrix*>(handle)->GetLabel(len);
     }
-    const float* XGDMatrixGetWeight( const void *handle, size_t* len ){
+    DLLEXPORT const float* XGDMatrixGetWeight( const void *handle, size_t* len ){
         return static_cast<const DMatrix*>(handle)->GetWeight(len);
     }
-    void XGDMatrixClear(void *handle){
+    DLLEXPORT void XGDMatrixClear(void *handle){
         static_cast<DMatrix*>(handle)->Clear();
     }
-    void XGDMatrixAddRow( void *handle, const XGEntry *data, size_t len ){
+    DLLEXPORT void XGDMatrixAddRow( void *handle, const XGEntry *data, size_t len ){
         static_cast<DMatrix*>(handle)->AddRow(data, len);
     }
-    size_t XGDMatrixNumRow(const void *handle){
+    DLLEXPORT size_t XGDMatrixNumRow(const void *handle){
         return static_cast<const DMatrix*>(handle)->NumRow();
     }
     const XGEntry* XGDMatrixGetRow(void *handle, unsigned ridx, size_t* len){
@@ -222,35 +224,47 @@ extern "C"{
     }
 
     // xgboost implementation
-    void *XGBoosterCreate( void *dmats[], size_t len ){
-        std::vector<xgboost::regrank::DMatrix*> mats;
-        for( size_t i = 0; i < len; ++i ){
-            DMatrix *dtr = static_cast<DMatrix*>(dmats[i]);
+    DLLEXPORT void *XGBoosterCreate( void *dmats[], size_t len2 ){
+        unsigned int len = len2;
+        log_debug("XGBoosterCreate: len=%u", (unsigned int)len);
+
+        std::vector<xgboost::regrank::DMatrix *> mats;
+        for( unsigned int i = 0; i < len; ++i ) {
+            log_debug("XGBoosterCreate: len=%u,i=%u,i<len=%d", (unsigned int)len, (unsigned int)i, (int)(i < len));
+            DMatrix *dtr = static_cast<DMatrix *>(dmats[i]);
             dtr->CheckInit();
+            log_debug("XGBoosterCreate: * i=%u", (unsigned int)i);
             mats.push_back( dtr );
+            log_debug("XGBoosterCreate: ** i=%u", (unsigned int)i);
         }
-        return new Booster( mats );
+       
+        log_debug("XGBoosterCreate: xxxx");
+        log_debug("XGBoosterCreate: mats=%u", (unsigned int)mats.size());
+        void *booster = new Booster( mats );
+        log_debug("XGBoosterCreate: booster=%p", booster);
+        return booster;
     }
-    void XGBoosterFree( void *handle ){
+
+    DLLEXPORT void XGBoosterFree( void *handle ){
         delete  static_cast<Booster*>(handle);
     }
-    void XGBoosterSetParam( void *handle, const char *name, const char *value ){
+    DLLEXPORT void XGBoosterSetParam( void *handle, const char *name, const char *value ){
         static_cast<Booster*>(handle)->SetParam( name, value );
     }
-    void XGBoosterUpdateOneIter( void *handle, void *dtrain ){
+    DLLEXPORT void XGBoosterUpdateOneIter( void *handle, void *dtrain ){
         Booster *bst = static_cast<Booster*>(handle);
         DMatrix *dtr = static_cast<DMatrix*>(dtrain);
-        bst->CheckInit(); dtr->CheckInit(); 
+        bst->CheckInit(); dtr->CheckInit();
         bst->UpdateOneIter( *dtr );
     }    
-    void XGBoosterBoostOneIter( void *handle, void *dtrain, 
+    DLLEXPORT void XGBoosterBoostOneIter( void *handle, void *dtrain, 
                                 float *grad, float *hess, size_t len, int bst_group ){
         Booster *bst = static_cast<Booster*>(handle);
         DMatrix *dtr = static_cast<DMatrix*>(dtrain);
         bst->CheckInit(); dtr->CheckInit(); 
         bst->BoostOneIter( *dtr, grad, hess, len, bst_group );
     }      
-    void XGBoosterEvalOneIter( void *handle, int iter, void *dmats[], const char *evnames[], size_t len ){
+    DLLEXPORT void XGBoosterEvalOneIter( void *handle, int iter, void *dmats[], const char *evnames[], size_t len ){
         Booster *bst = static_cast<Booster*>(handle);
         bst->CheckInit();
 
@@ -265,13 +279,13 @@ extern "C"{
     const float *XGBoosterPredict( void *handle, void *dmat, size_t *len, int bst_group ){
         return static_cast<Booster*>(handle)->Pred( *static_cast<DMatrix*>(dmat), len, bst_group );
     }
-    void XGBoosterLoadModel( void *handle, const char *fname ){        
-        static_cast<Booster*>(handle)->LoadModel( fname );        
+    DLLEXPORT void XGBoosterLoadModel( void *handle, const char *fname ){
+        static_cast<Booster*>(handle)->LoadModel( fname );
     } 
-    void XGBoosterSaveModel( const void *handle, const char *fname ){
+    DLLEXPORT void XGBoosterSaveModel( const void *handle, const char *fname ){
         static_cast<const Booster*>(handle)->SaveModel( fname );
     }
-    void XGBoosterDumpModel( void *handle, const char *fname, const char *fmap ){
+    DLLEXPORT void XGBoosterDumpModel( void *handle, const char *fname, const char *fmap ){
         using namespace xgboost::utils;
         FILE *fo = FopenCheck( fname, "w" );
         FeatMap featmap; 
@@ -282,9 +296,9 @@ extern "C"{
         fclose( fo );
     }
 
-    void XGBoosterUpdateInteract( void *handle, void *dtrain, const char *action ){
+    DLLEXPORT void XGBoosterUpdateInteract( void *handle, void *dtrain, const char *action ){
         Booster *bst = static_cast<Booster*>(handle);
-        DMatrix *dtr = static_cast<DMatrix*>(dtrain);        
+        DMatrix *dtr = static_cast<DMatrix*>(dtrain); 
         bst->CheckInit(); dtr->CheckInit(); 
         std::string act( action );
         bst->UpdateInteract( act, *dtr );

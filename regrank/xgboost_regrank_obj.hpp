@@ -89,7 +89,7 @@ namespace xgboost{
                         for(unsigned j = gptr[k]; j < gptr[k+1]; ++j ){
                             rec.push_back( preds[j] );
                             grad[j] = hess[j] = 0.0f;
-                            nhit += info.labels[j];
+                            nhit += (int)info.labels[j];  // !@#$ nhit += info.labels[j]; ? Unfortunated that 0,1 labels are type float
                         }
                         Softmax( rec );
                         if( nhit == 1 ){
@@ -168,7 +168,7 @@ namespace xgboost{
                         for( int k = 0; k < nclass; ++ k ){
                             rec[k] = preds[j + k * ndata];
                         }
-                        preds[j] = FindMaxIndex( rec );
+                        preds[j] = (float)FindMaxIndex( rec );
                     }
                 }
                 preds.resize( ndata );
@@ -236,7 +236,8 @@ namespace xgboost{
                             unsigned j = i + 1;
                             while( j < rec.size() && rec[j].first == rec[i].first ) ++ j;
                             // bucket in [i,j), get a sample outside bucket
-                            unsigned nleft = i, nright = rec.size() - j;
+                            unsigned nleft = i;
+                            unsigned nright = (unsigned int)(rec.size() - j);
                             if( nleft + nright != 0 ){
                                 int nsample = num_pairsample;
                                 while( nsample -- ){

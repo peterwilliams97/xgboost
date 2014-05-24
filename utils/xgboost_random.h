@@ -136,8 +136,13 @@ namespace xgboost{
                 this->rseed = sd;
             }
             /*! \brief return a real number uniform in [0,1) */
-            inline double RandDouble( void ){               
+            inline double RandDouble( void ){     
+#ifdef WIN32
+                return static_cast<double>( rand() ) / (static_cast<double>( RAND_MAX )+1.0);
+#else
                 return static_cast<double>( rand_r( &rseed ) ) / (static_cast<double>( RAND_MAX )+1.0);
+#endif
+
             }
             // random number seed
             unsigned rseed;

@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xgboost", "xgboost.vcxproj", "{E2EC4779-11AF-44C2-8C42-6D622750D7A2}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xgboost_python", "xgboost_python\xgboost_python.vcxproj", "{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Debug|x64 = Debug|x64
+		Release|Win32 = Release|Win32
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Debug|Win32.ActiveCfg = Debug|Win32
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Debug|Win32.Build.0 = Debug|Win32
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Debug|x64.ActiveCfg = Debug|x64
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Debug|x64.Build.0 = Debug|x64
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Release|Win32.ActiveCfg = Release|Win32
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Release|Win32.Build.0 = Release|Win32
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Release|x64.ActiveCfg = Release|x64
+		{E2EC4779-11AF-44C2-8C42-6D622750D7A2}.Release|x64.Build.0 = Release|x64
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Debug|Win32.Build.0 = Debug|Win32
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Debug|x64.ActiveCfg = Debug|x64
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Release|Win32.ActiveCfg = Release|Win32
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Release|Win32.Build.0 = Release|Win32
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Release|x64.ActiveCfg = Release|x64
+		{9D8C71C9-E0DC-4EDA-B949-0594ED3240B7}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
