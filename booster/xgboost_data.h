@@ -299,9 +299,9 @@ namespace xgboost{
                     }
                 }
                 // sort columns
-                unsigned ncol = static_cast<unsigned>(this->NumCol());
+                int ncol = static_cast<int>(this->NumCol());
                 #pragma omp parallel for schedule(static)
-                for (unsigned i = 0; i < ncol; i++){
+                for (int i = 0; i < ncol; i++){
                     // Accessing the end sentinal as &col_data_[col_ptr_[cidx + 1]] triggers an overrun assert
                     std::sort(&col_data_[0] + col_ptr_[i], &col_data_[0] + col_ptr_[i + 1], REntry::cmp_fvalue);
                 }

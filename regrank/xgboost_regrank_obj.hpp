@@ -31,9 +31,9 @@ namespace xgboost{
                 utils::Assert( preds.size() == info.labels.size(), "label size predict size not match" );
                 grad.resize(preds.size()); hess.resize(preds.size());
 
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 #pragma omp parallel for schedule( static )
-                for (unsigned j = 0; j < ndata; ++j){
+                for (int j = 0; j < ndata; ++j){
                     float p = loss.PredTransform(preds[j]);
                     float w = info.GetWeight(j);
                     if( info.labels[j] == 1.0f ) w *= scale_pos_weight;
@@ -47,9 +47,9 @@ namespace xgboost{
                 return "rmse";
             }
             virtual void PredTransform(std::vector<float> &preds){
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 #pragma omp parallel for schedule( static )
-                for (unsigned j = 0; j < ndata; ++j){
+                for (int j = 0; j < ndata; ++j){
                     preds[j] = loss.PredTransform( preds[j] );
                 }
             }
@@ -77,13 +77,13 @@ namespace xgboost{
                 grad.resize(preds.size()); hess.resize(preds.size());
                 const std::vector<unsigned> &gptr = info.group_ptr;
                 utils::Assert( gptr.size() != 0 && gptr.back() == preds.size(), "rank loss must have group file" );
-                const unsigned ngroup = static_cast<unsigned>( gptr.size() - 1 );
+                const int ngroup = static_cast<int>( gptr.size() - 1 );
 
                 #pragma omp parallel
                 {
                     std::vector< float > rec;                    
                     #pragma omp for schedule(static)
-                    for (unsigned k = 0; k < ngroup; ++k){
+                    for (int k = 0; k < ngroup; ++k){
                         rec.clear();
                         int nhit = 0;
                         for(unsigned j = gptr[k]; j < gptr[k+1]; ++j ){
@@ -128,12 +128,12 @@ namespace xgboost{
                 utils::Assert( preds.size() == (size_t)nclass * info.labels.size(), "SoftmaxMultiClassObj: label size and pred size does not match" );
                 grad.resize(preds.size()); hess.resize(preds.size());
                 
-                const unsigned ndata = static_cast<unsigned>(info.labels.size());
+                const int ndata = static_cast<int>(info.labels.size());
                 #pragma omp parallel
                 {
                     std::vector<float> rec(nclass);
                     #pragma omp for schedule(static)
-                    for (unsigned j = 0; j < ndata; ++j){
+                    for (int j = 0; j < ndata; ++j){
                         for( int k = 0; k < nclass; ++ k ){
                             rec[k] = preds[j + k * ndata];
                         }
@@ -158,13 +158,13 @@ namespace xgboost{
             virtual void PredTransform(std::vector<float> &preds){
                 utils::Assert( nclass != 0, "must set num_class to use softmax" );
                 utils::Assert( preds.size() % nclass == 0, "SoftmaxMultiClassObj: label size and pred size does not match" );                
-                const unsigned ndata = static_cast<unsigned>(preds.size()/nclass);
+                const int ndata = static_cast<int>(preds.size()/nclass);
                 
                 #pragma omp parallel
                 {
                     std::vector<float> rec(nclass);
                     #pragma omp for schedule(static)
-                    for (unsigned j = 0; j < ndata; ++j){
+                    for (int j = 0; j < ndata; ++j){
                         for( int k = 0; k < nclass; ++ k ){
                             rec[k] = preds[j + k * ndata];
                         }
@@ -207,7 +207,7 @@ namespace xgboost{
                 grad.resize(preds.size()); hess.resize(preds.size());
                 const std::vector<unsigned> &gptr = info.group_ptr;
                 utils::Assert( gptr.size() != 0 && gptr.back() == preds.size(), "rank loss must have group file" );
-                const unsigned ngroup = static_cast<unsigned>( gptr.size() - 1 );
+                const int ngroup = static_cast<int>( gptr.size() - 1 );
 
                 #pragma omp parallel
                 {
@@ -219,7 +219,7 @@ namespace xgboost{
                     std::vector< std::pair<float,unsigned> > rec;
                     
                     #pragma omp for schedule(static)
-                    for (unsigned k = 0; k < ngroup; ++k){
+                    for (int k = 0; k < ngroup; ++k){
                         lst.clear(); pairs.clear(); 
                         for(unsigned j = gptr[k]; j < gptr[k+1]; ++j ){
                             lst.push_back( ListEntry(preds[j], info.labels[j], j ) );

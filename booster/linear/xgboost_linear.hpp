@@ -168,10 +168,10 @@ namespace xgboost{
                     }
                     // remove bias effect
                     double dw = param.learning_rate * param.CalcDeltaBias( sum_grad, sum_hess, model.bias() );
-                    model.bias() += dw;
+                    model.bias() += (float)dw;
                     // update grad value 
                     for( size_t i = 0; i < grad.size(); i ++ ){
-                        grad[ i ] += dw * hess[ i ];
+                        grad[ i ] += (float)(dw * hess[ i ]);
                     }
                 }
 

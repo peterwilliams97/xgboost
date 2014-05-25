@@ -441,7 +441,7 @@ namespace xgboost{
                 if( !strcmp( name, "min_split_loss") )    min_split_loss = (float)atof( val );
                 if( !strcmp( name, "max_depth") )         max_depth = atoi( val );           
                 if( !strcmp( name, "reg_lambda") )        reg_lambda = (float)atof( val );
-                if( !strcmp( name, "reg_method") )        reg_method = (float)atof( val );
+                if( !strcmp( name, "reg_method") )        reg_method = atoi( val );
                 if( !strcmp( name, "subsample") )         subsample  = (float)atof( val );
                 if( !strcmp( name, "use_layerwise") )     use_layerwise = atoi( val );
                 if( !strcmp( name, "nthread") )           nthread = atoi( val );

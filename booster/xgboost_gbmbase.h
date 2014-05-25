@@ -154,7 +154,7 @@ namespace xgboost{
              * \param data input data
              */
             inline void DumpPath(FILE *fo, const FMatrixS &data){
-                for (size_t i = 0; i < data.NumRow(); ++i){
+                for (bst_uint i = 0; i < data.NumRow(); ++i){
                     for (size_t j = 0; j < boosters.size(); ++j){
                         if (j != 0) fprintf(fo, "\t");
                         std::vector<int> path;

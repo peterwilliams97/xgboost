@@ -371,7 +371,8 @@ namespace xgboost{
                             }
                         } 
                     }
-                    this->add_task( Task( 0, &idset[0], idset.size() ) ); return;
+                    this->add_task( Task( 0, &idset[0], (unsigned int)idset.size() ) ); 
+                    return;
                 }
                 
                 utils::Assert( group_id.size() == ngrads, "number of groups must be exact" );            
@@ -392,7 +393,7 @@ namespace xgboost{
                         if( hess[ i ] < 0.0f ) continue;
                         builder.PushElem( group_id[ i ], static_cast<unsigned>(i) );
                     }
-                    for( size_t i = 1; i < rptr.size(); i ++ ){
+                    for( int i = 1; i < rptr.size(); i ++ ){
                         const size_t start = rptr[ i - 1 ], end = rptr[ i ];
                         if( start < end ){
                             this->add_task( Task( i - 1, &idset[ start ], end - start ) );

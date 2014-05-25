@@ -85,10 +85,10 @@ namespace xgboost{
                     snode.resize( tree.param.num_nodes, NodeEntry() );
                 }
 
-                const unsigned ndata = static_cast<unsigned>( position.size() );
+                const int ndata = static_cast<int>( position.size() );
                 
                 #pragma omp parallel for schedule( static )
-                for( unsigned i = 0; i < ndata; ++ i ){
+                for( int i = 0; i < ndata; ++ i ){
                     const int tid = omp_get_thread_num();
                     if( position[i] < 0 ) continue; 
                     stemp[tid][ position[i] ].sum_grad += grad[i];
@@ -105,12 +105,12 @@ namespace xgboost{
                     // update node statistics
                     snode[nid].sum_grad = sum_grad; 
                     snode[nid].sum_hess = sum_hess;
-                    snode[nid].root_gain = param.CalcRootGain( sum_grad, sum_hess );
+                    snode[nid].root_gain = (float)param.CalcRootGain( sum_grad, sum_hess );
                     if( !tree[nid].is_root() ){
-                        snode[nid].weight = param.CalcWeight( sum_grad, sum_hess, tree.stat( tree[nid].parent() ).base_weight );
+                        snode[nid].weight = (float)param.CalcWeight( sum_grad, sum_hess, tree.stat( tree[nid].parent() ).base_weight );
                         tree.stat(nid).base_weight = snode[nid].weight;
                     }else{
-                        snode[nid].weight = param.CalcWeight( sum_grad, sum_hess, 0.0f );
+                        snode[nid].weight = (float)param.CalcWeight( sum_grad, sum_hess, 0.0f );
                         tree.stat(nid).base_weight = snode[nid].weight;
                     }
                 }
@@ -176,10 +176,10 @@ namespace xgboost{
 
             // find splits at current level
             inline void FindSplit( int depth ){
-                const unsigned nsize = static_cast<unsigned>( feat_index.size() );
+                const int nsize = static_cast<int>( feat_index.size() );
                 
                 #pragma omp parallel for schedule( dynamic, 1 )
-                for( unsigned i = 0; i < nsize; ++ i ){
+                for( int i = 0; i < nsize; ++ i ){
                     const unsigned fid = feat_index[i];
                     const int tid = omp_get_thread_num();
                     if( param.need_forward_search() ){
@@ -209,9 +209,9 @@ namespace xgboost{
 
                 {// reset position 
                     // step 1, set default direct nodes to default, and leaf nodes to -1, 
-                    const unsigned ndata = static_cast<unsigned>( position.size() );
+                    const int ndata = static_cast<int>( position.size() );
                     #pragma omp parallel for schedule( static )
-                    for( unsigned i = 0; i < ndata; ++ i ){
+                    for( int i = 0; i < ndata; ++ i ){
                         const int nid = position[i];
                         if( nid >= 0 ){
                             if( tree[ nid ].is_leaf() ){
@@ -233,9 +233,9 @@ namespace xgboost{
                     std::sort( fsplits.begin(), fsplits.end() );
                     fsplits.resize( std::unique( fsplits.begin(), fsplits.end() ) - fsplits.begin() );
 
-                    const unsigned nfeats = static_cast<unsigned>( fsplits.size() );
+                    const int nfeats = static_cast<int>( fsplits.size() );
                     #pragma omp parallel for schedule( dynamic, 1 )
-                    for( unsigned i = 0; i < nfeats; ++ i ){
+                    for( int i = 0; i < nfeats; ++ i ){
                         const unsigned fid = fsplits[i];
                         for( typename FMatrix::ColIter it = smat.GetSortedCol( fid ); it.Next(); ){
                             const bst_uint ridx = it.rindex();

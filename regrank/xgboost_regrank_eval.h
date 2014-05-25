@@ -37,10 +37,10 @@ namespace xgboost{
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
                 utils::Assert( preds.size() == info.labels.size(), "label size predict size not match" );
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 float sum = 0.0, wsum = 0.0;
                 #pragma omp parallel for reduction(+:sum,wsum) schedule( static )
-                for (unsigned i = 0; i < ndata; ++i){
+                for (int i = 0; i < ndata; ++i){
                     const float wt = info.GetWeight(i);
                     const float diff = info.labels[i] - preds[i];
                     sum += diff*diff * wt;
@@ -58,10 +58,10 @@ namespace xgboost{
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
                 utils::Assert( preds.size() == info.labels.size(), "label size predict size not match" );
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 float sum = 0.0f, wsum = 0.0f;
                 #pragma omp parallel for reduction(+:sum,wsum) schedule( static )
-                for (unsigned i = 0; i < ndata; ++i){
+                for (int i = 0; i < ndata; ++i){
                     const float y = info.labels[i];
                     const float py = preds[i];
                     const float wt = info.GetWeight(i);
@@ -79,10 +79,10 @@ namespace xgboost{
         struct EvalError : public IEvaluator{
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 float sum = 0.0f, wsum = 0.0f;
                 #pragma omp parallel for reduction(+:sum,wsum) schedule( static )
-                for (unsigned i = 0; i < ndata; ++i){
+                for (int i = 0; i < ndata; ++i){
                     const float wt = info.GetWeight(i);                    
                     if (preds[i] > 0.5f){
                         if (info.labels[i] < 0.5f) sum += wt;
@@ -109,21 +109,21 @@ namespace xgboost{
             }            
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 utils::Assert( info.weights.size() == ndata, "we need weight to evaluate ams");
                 std::vector< std::pair<float, unsigned> > rec(ndata);
                 
                 #pragma omp parallel for schedule( static )                
-                for (unsigned i = 0; i < ndata; ++i){
+                for (int i = 0; i < ndata; ++i){
                     rec[i] = std::make_pair( preds[i], i );
                 }
                 std::sort( rec.begin(), rec.end(), CmpFirst );
-                unsigned ntop = static_cast<unsigned>( ratio_ * ndata );
+                int ntop = static_cast<int>( ratio_ * ndata );
                 if( ntop == 0 ) ntop = ndata;
                 const double br = 10.0;
                 unsigned thresindex = 0;
                 double s_tp = 0.0, b_fp = 0.0, tams = 0.0;
-                for (unsigned i = 0; i < ndata-1 && i < ntop; ++i){
+                for (int i = 0; i < ndata-1 && i < ntop; ++i){
                     const unsigned ridx = rec[i].second;
                     const float wt = info.weights[ridx];
                     if( info.labels[ridx] > 0.5f ){
@@ -159,10 +159,10 @@ namespace xgboost{
         public:
             virtual float Eval(const std::vector<float> &preds,
                                const DMatrix::Info &info) const {
-                const unsigned ndata = static_cast<unsigned>(preds.size());
+                const int ndata = static_cast<int>(preds.size());
                 float sum = 0.0f, wsum = 0.0f;
                 #pragma omp parallel for reduction(+:sum,wsum) schedule( static )
-                for (unsigned i = 0; i < ndata; ++i){
+                for (int i = 0; i < ndata; ++i){
                     const float wt = info.GetWeight(i);
                     int label = static_cast<int>(info.labels[i]);
                     if (static_cast<int>(preds[i]) != label ) sum += wt;
@@ -183,7 +183,7 @@ namespace xgboost{
                 std::vector<unsigned int> tgptr(2, 0); tgptr[1] = (unsigned int)preds.size();
                 const std::vector<unsigned> &gptr = info.group_ptr.size() == 0 ? tgptr : info.group_ptr;
                 utils::Assert(gptr.back() == preds.size(), "EvalAuc: group structure must match number of prediction");
-                const unsigned ngroup = static_cast<unsigned>(gptr.size() - 1);
+                const int ngroup = static_cast<int>(gptr.size() - 1);
 
                 double sum_auc = 0.0f;
                 #pragma omp parallel reduction(+:sum_auc) 
@@ -191,7 +191,7 @@ namespace xgboost{
                     // each thread takes a local rec
                     std::vector< std::pair<float, unsigned> > rec;
                     #pragma omp for schedule(static) 
-                    for (unsigned k = 0; k < ngroup; ++k){
+                    for (int k = 0; k < ngroup; ++k){
                         rec.clear();
                         for (unsigned j = gptr[k]; j < gptr[k + 1]; ++j){
                             rec.push_back(std::make_pair(preds[j], j));
@@ -236,7 +236,7 @@ namespace xgboost{
                 const std::vector<unsigned> &gptr = info.group_ptr;
                 utils::Assert(gptr.size() != 0, "must specify group when constructing rank file");
                 utils::Assert( gptr.back() == preds.size(), "EvalRanklist: group structure must match number of prediction");
-                const unsigned ngroup = static_cast<unsigned>(gptr.size() - 1);
+                const int ngroup = static_cast<int>(gptr.size() - 1);
 
                 double sum_metric = 0.0f;
                 #pragma omp parallel reduction(+:sum_metric) 
@@ -244,7 +244,7 @@ namespace xgboost{
                     // each thread takes a local rec
                     std::vector< std::pair<float, unsigned> > rec;
                     #pragma omp for schedule(static) 
-                    for (unsigned k = 0; k < ngroup; ++k){
+                    for (int k = 0; k < ngroup; ++k){
                         rec.clear();
                         for (unsigned j = gptr[k]; j < gptr[k + 1]; ++j){
                             rec.push_back(std::make_pair(preds[j], (int)info.labels[j]));
