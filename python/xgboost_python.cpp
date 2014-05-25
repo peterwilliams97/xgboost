@@ -224,14 +224,11 @@ extern "C" {
     }
 
     // xgboost implementation
-    DLLEXPORT void *XGBoosterCreate( void *dmats[], size_t len2 ){
-        unsigned int len = len2;
-        log_debug("XGBoosterCreate: len=%u", (unsigned int)len);
+    DLLEXPORT void *XGBoosterCreate( void *dmats[], size_t len ){
 
-        std::vector<xgboost::regrank::DMatrix *> mats;
-        for( unsigned int i = 0; i < len; ++i ) {
-            log_debug("XGBoosterCreate: len=%u,i=%u,i<len=%d", (unsigned int)len, (unsigned int)i, (int)(i < len));
-            DMatrix *dtr = static_cast<DMatrix *>(dmats[i]);
+        std::vector<xgboost::regrank::DMatrix*> mats;
+        for( size_t i = 0; i < len; ++i ){
+            DMatrix *dtr = static_cast<DMatrix*>(dmats[i]);
             dtr->CheckInit();
             log_debug("XGBoosterCreate: * i=%u", (unsigned int)i);
             mats.push_back( dtr );
