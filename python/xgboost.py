@@ -13,8 +13,8 @@ IS_64_BIT = ctypes.sizeof(ctypes.c_voidp) > 4
 
 # set this line correctly
 if IS_WINDOWS:
-    parent_dir, _ = os.path.split(__file__)
-    XGBOOST_PATH = os.path.join(parent_dir, '..', 'x64', 'Release', 'xgboost_python.dll')
+    XGBOOST_PATH = os.path.join(os.path.dirname(__file__), '..', 'x64', 'Release',
+        'xgboost_python.dll')
 else:
     XGBOOST_PATH = os.path.join(os.path.dirname(__file__), '/libxgboostpy.so')
 
@@ -23,7 +23,7 @@ assert os.path.exists(XGBOOST_PATH), 'xgboost library "%s" does not exist' % XGB
 
 # entry type of sparse matrix
 class REntry(ctypes.Structure):
-    _fields_ = [("findex", ctypes.c_uint), ("fvalue", ctypes.c_float) ]
+    _fields_ = [("findex", ctypes.c_uint), ("fvalue", ctypes.c_float)]
 
 # load in xgboost library
 xglib = ctypes.cdll.LoadLibrary(XGBOOST_PATH)
@@ -33,7 +33,6 @@ if IS_64_BIT:
     size_t = ctypes.c_ulonglong
 else:
     size_t = ctypes.c_ulong
-
 
 xglib.XGDMatrixCreate.restype = ctypes.c_void_p
 xglib.XGDMatrixNumRow.restype = size_t

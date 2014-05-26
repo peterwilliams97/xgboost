@@ -24,12 +24,14 @@ def AMS(s, b):
     """ Approximate Median Significance defined as:
         AMS = sqrt(2 { (s + b + b_r) log[1 + (s/(b+b_r))] - s})
         where b_r = 10, b = background, s = signal, log is natural logarithm
+
+        bReg is like a fixed addition to background. Noise from unmodelled part of detector
+        pipeline that we need to get above?
     """
     assert s >= 0
     assert b >= 0
     bReg = 10.0
     return np.sqrt(2.0 * ((s + b + bReg) * np.log(1 + s / (b + bReg)) - s))
-
 
 
 def get_y_pred(y_out, threshold_ratio):
@@ -74,7 +76,7 @@ def fit_predict(X_train, w_train, y_train, X_test, params):
     params['nthread'] = 4
 
     # boost 120 trees
-    num_round = 120
+    num_round = 500
     plst = list(params.items())
 
     xgmat_train = xgb.DMatrix(X_train, label=y_train, missing=-999.0, weight=w_train)
