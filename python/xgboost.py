@@ -18,7 +18,7 @@ if IS_WINDOWS:
 else:
     XGBOOST_PATH = os.path.join(os.path.dirname(__file__), '/libxgboostpy.so')
 
-assert os.path.exists(XGBOOST_PATH), XGBOOST_PATH
+assert os.path.exists(XGBOOST_PATH), 'xgboost library "%s" does not exist' % XGBOOST_PATH
 
 
 # entry type of sparse matrix
