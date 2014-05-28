@@ -7,15 +7,18 @@ import sys
 import math
 from pprint import pprint
 import numpy as np
+import pandas as pd
+from pandas import DataFrame, Series
 from sklearn.cross_validation import KFold
 # add path of xgboost python module
 sys.path.append('../../python/')
 import xgboost as xgb
 
 test_size = 550000
-DEFAULT_POINTS = 8
+N_ROUNDS = 150 # 500
+DEFAULT_POINTS = 10
 DEFAULT_FOLDS = 5
-DEFAULT_RUNS = 2
+DEFAULT_RUNS = 1
 
 RANDOM_STATE = 111
 
@@ -34,7 +37,7 @@ def AMS(s, b):
     return np.sqrt(2.0 * ((s + b + bReg) * np.log(1 + s / (b + bReg)) - s))
 
 
-def get_y_pred(y_out, threshold_ratio):
+def get_y_pred_rank(y_out, threshold_ratio):
     """Return binary classification y_pred for xgboost output y_out and
         Entries with top threshold_ratio  * n_samples y_out values are
         1, others are 0"""
@@ -47,11 +50,15 @@ def get_y_pred(y_out, threshold_ratio):
 
     y_pred = np.zeros(n_samples, dtype=int)
     y_pred[positive_indexes] = 1
-    return y_pred
+
+    # Rank from lowest to highest, starting at 1
+    rank = indexes_by_y_out.argsort()[::1] + 1
+
+    return y_pred, rank
 
 
 def get_score(w_test, y_test, y_out, threshold_ratio):
-    y_pred = get_y_pred(y_out, threshold_ratio)
+    y_pred, _ = get_y_pred_rank(y_out, threshold_ratio)
 
     positives = y_pred != 0
     true_positives = positives & (y_test != 0)
@@ -62,7 +69,7 @@ def get_score(w_test, y_test, y_out, threshold_ratio):
 
 
 def fit_predict(X_train, w_train, y_train, X_test, params):
-    n_samples, n_features = X.shape
+    #n_samples, n_features = X.shape
     params = params.copy()
     # rescale weight to make it same as test set, Why? !@#$
     #weights = dtrain[:, 31] * test_size / n_samples
@@ -75,14 +82,14 @@ def fit_predict(X_train, w_train, y_train, X_test, params):
     params['silent'] =  1
     params['nthread'] = 4
 
-    # boost 120 trees
-    num_round = 500
+    # boost N_ROUNDS (was 120) trees
+
     plst = list(params.items())
 
     xgmat_train = xgb.DMatrix(X_train, label=y_train, missing=-999.0, weight=w_train)
     #print('loading data end, start to boost trees')
     watchlist = [] # [(xgmat_train, 'train')]
-    bst = xgb.train(plst, xgmat_train, num_round, watchlist)
+    bst = xgb.train(plst, xgmat_train, N_ROUNDS, watchlist)
 
     xgmat_test = xgb.DMatrix(X_test, missing=-999.0)
     print('training data end, start to predict')
@@ -115,20 +122,22 @@ def eval_params(X, weight, y, params, n_points=DEFAULT_POINTS, n_folds=DEFAULT_F
                 print('eval_params: fold=%d,run=%d,score=%.3f' % (fold, run, score))
                 sys.stdout.flush()
 
-    score_summaries = np.empty((n_points, 2))
+    score_summaries = {}
     for ic in xrange(all_scores.shape[0]):
         scores = all_scores[ic, :, :]
-        score_summaries[ic, 0] = np.mean(scores)
-        score_summaries[ic, 1] = np.std(scores, dtype=np.float64)
+        threshold_ratio = cutoffs[ic]
+        score_summaries[threshold_ratio] = np.mean(scores), np.std(scores, dtype=np.float64)
         print('***eval_params: tr=%.3f, score=%.3f+-%.3f' % (
-            cutoffs[ic], score_summaries[ic, 0], score_summaries[ic, 1]))
+            cutoffs[ic], score_summaries[threshold_ratio][0], score_summaries[threshold_ratio][1]))
+    print('^' * 80)
+    print(repr(score_summaries))
     print('-' * 80)
     sys.stdout.flush()
 
     return score_summaries
 
 
-def load_data():
+def load_training_data():
 
     # path to where the data lies
     dpath = 'data'
@@ -157,6 +166,25 @@ def load_data():
 
     X, y = data, label
     return X, weight, y
+
+
+def load_test_data():
+
+    # path to where the data lies
+    dpath = 'data'
+    test_path = os.path.join(dpath, 'test.csv')
+
+    # load in training data, directly use numpy
+    dtrain = np.loadtxt(test_path, delimiter=',', skiprows=1)
+    print ('finished loading from "%s",dtrain=%s' % (test_path, list(dtrain.shape)))
+
+    indexes = dtrain[:, 0].astype(int)
+    data = dtrain[:, 1:30]
+
+    n_samples, n_features = data.shape
+
+    X = data
+    return indexes, X
 
 
 test_params = {
@@ -204,13 +232,95 @@ test_params = {
         'bst:max_depth': 6,
         'eval_metric': 'auc',
     },
+
+    7: {
+        'objective': 'binary:logitraw',
+        'bst:eta': 0.05,
+        'bst:max_depth': 10,
+        'eval_metric': 'auc',
+    },
 }
 
 
+def make_submission(path, params, threshold_ratio):
+
+    X_train, w_train, y_train = load_training_data()
+    indexes_test, X_test = load_test_data()
+    y_out = fit_predict(X_train, w_train, y_train, X_test, params)
+    y_pred, rank = get_y_pred_rank(y_out, threshold_ratio)
+
+    submission = DataFrame({'EventId': indexes_test, 'RankOrder': rank, 'Class': y_pred},
+        columns=['EventId', 'RankOrder', 'Class'])
+    submission['Class'] = submission['Class'].apply(lambda x: 's' if x else 'b')
+
+    submission.to_csv(path, index=False)
+    print('--------------------- Submission')
+    print(submission.head())
+    print(path)
+    return submission
+
+
+#
+# Execution starts here
+#
 if __name__ == '__main__':
-    X, weight, y = load_data()
-    test_scores = {test: eval_params(X, weight, y, test_params[test])
-        for test in sorted(test_params.keys())}
-    print('=' * 80)
-    pprint(test_scores)
+
+    np.random.seed(RANDOM_STATE)
+
+    import optparse
+
+    parser = optparse.OptionParser('python %s [options]' % sys.argv[0])
+    parser.add_option('-a', '--do-all', action='store_true', dest='do_all', default=False,
+            help='bootstrap samples')
+    parser.add_option('-s', '--submit', dest='submission', default=None,
+            help='make submission with this name')
+    parser.add_option('-c', '--number-rounds', dest='n_rounds', default=N_ROUNDS, type=int,
+            help='number of rounds')
+    parser.add_option('-t', '--test-number', dest='test_number', default=-1, type=int,
+            help='test number to run')
+    parser.add_option('-r', '--threshold-ratio', dest='threshold_ratio', default=-1.0, type=float,
+            help='threshold ration for signal')
+    options, args = parser.parse_args()
+
+    print(__file__)
+
+    N_ROUNDS = options.n_rounds
+    print('N_ROUNDS=%d' % N_ROUNDS)
+
+    if options.submission:
+        assert options.threshold_ratio > 0.0, 'Need to specify threshold_ratio'
+        make_submission(options.submission, test_params[options.test_number], options.threshold_ratio)
+        exit(0)
+
+    test_keys = set()
+    if options.do_all:
+        test_keys = test_keys.union(test_params.keys())
+    if options.test_number >= 0:
+        test_keys.add(options.test_number)
+
+    if not test_keys:
+        print('no tests specified')
+        exit(0)
+
+    print('N_ROUNDS=%d,test_keys=%s' % (N_ROUNDS, sorted(test_keys)))
+
+    X, weight, y = load_training_data()
+    test_scores = {}
+    best_test = -1
+    best_threshold = -1.0
+    best_score = 0.0
+
+    for test in sorted(test_keys):
+        score_summaries = eval_params(X, weight, y, test_params[test])
+        test_scores[test] = score_summaries
+        for threshold_ratio, (score, score_sd) in score_summaries.items():
+           if score > best_score:
+                best_test, best_threshold, best_score = test, threshold_ratio, score
+        print('-' * 80)
+        print('%d tests: best_test=%d,best_threshold=%.3f: best_score=%.3f' % (len(test_scores),
+            best_test, best_threshold, best_score))
+        print('best_test = %s' % repr(test_params[best_test]))
+        print()
+        print(repr(test_scores))
+        print('=' * 80)
 
